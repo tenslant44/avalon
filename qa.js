@@ -1,0 +1,2 @@
+import {runAcceptance,visualReview} from './game.js';
+if(new URLSearchParams(location.search).has('visual')){document.getElementById('qaResults').remove();visualReview();}else runAcceptance().then(report=>{document.getElementById('qaResults').textContent=JSON.stringify(report,null,2);document.title='QA '+report.passed+' passed / '+report.failed+' failed';}).catch(error=>{console.error('QA FATAL',error.stack);document.getElementById('qaResults').textContent=error.stack;});

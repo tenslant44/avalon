@@ -1,0 +1,248 @@
+HALF-DAY MAYHEM
+PROJECT DOCUMENTATION
+Updated: 2026-10-25
+
+1. RUNNING THE PROJECT
+----------------------
+Open index.html in Websim's preview. There is no build step or package install.
+The game uses Three.js 0.170.0 and cannon-es 0.20.0 through CDN imports.
+qa.html?qa=1 runs the acceptance suite; qa.html?visual=1 runs the visual fixture.
+Tests are defined in game.js and report individual results plus a final count.
+
+2. CONTROLS
+-----------
+WASD / arrows: camera-relative movement.
+Mouse / right-drag: look and aim. Board and side views use the screen pointer.
+Hold left click / touch HIT: attack with the equipped weapon.
+1: stones. 2: switch. 3: heavy club. 4: stolen SWAT rifle.
+F: punch. G: kick. Shift: sprint and body slam. Space: jump.
+Q: smoke to break line of sight.
+E: steal a dropped rifle, take ammo, pick up or drop a body, collect items,
+   call/select the elevator, or use the service lift, depending on context.
+When carrying a body, E drops it and Attack throws it.
+C: cycle third-person, first-person, board and side views.
+P / Escape: pause. Enter / Escape: skip the current cinematic.
+Mouse wheel: zoom in board view.
+Touch buttons and the left joystick provide the corresponding actions.
+Gamepad: left stick movement, right stick look, A jump, X punch, B kick,
+button 3 interact, button 10 sprint.
+
+Interaction priority: drop a carried body, nearby rifle/ammo loot, nearby body,
+elevator, service lift, normal item pickup. Loot requires an explicit E press.
+The interaction prompt states what E will do.
+
+3. WEAPONS, KILLS AND LOOT
+--------------------------
+A run starts with 100 HP, 16 stones, no rifle and no rifle ammunition.
+All human characters have 100 HP. An attack with base damage of 100 or more
+kills outright, ignoring temporary hit shields. Ordinary sub-100 damage can
+be blocked by hit shields. Difficulty scales ordinary incoming player damage.
+NPC damage is not reduced by the old 0.85 multiplier.
+Police attacks can kill; lethal baton hits no longer force an arrest ending.
+
+Stones: 52 damage, arcing projectile, 0.2-second base attack cooldown.
+Switch: 15 character damage / 42 object damage, 0.15-second cooldown.
+Heavy club: 46 character damage / 135 object damage, 0.6-second cooldown.
+Punch: 24 damage. Kick: 42 damage. Sprint body slam: 18 damage.
+Thrown bodies: 55 damage, credited to the player.
+
+Rifle acquisition:
+- Kill a SWAT officer with a credited player kill, then approach the drop.
+- Press E to steal the rifle. Merely killing the officer does not equip it.
+- Stealing supplies 30 rounds and equips the rifle; press 4 to re-equip it.
+- Other deaths drop 12 rounds. Ammo may be collected before owning a rifle.
+- A SWAT death not credited to the player supplies ammo, not a rifle unlock.
+- Each drop can be collected once. Drops and weapon ownership reset per run.
+- Loot falls to supported surfaces and can fall again after structural damage.
+
+Rifle: 40 damage per hit, 180-metre range, 0.12-second base fire interval.
+It consumes one round per shot and cannot fire with no ammunition.
+Shots stop at the nearest solid target: cover, a character, an aircraft or a
+vehicle. Aircraft and vehicle health is shown when aimed at with the rifle.
+The rifle uses total carried ammunition, with no separate reload action.
+SWAT officers visibly carry rifles and can also fire at range.
+
+Credited kills increment the kill counter and fictional homicide ledger.
+Officer kills award 1,600 base points; civilian/rival kills award 1,000.
+Combo multipliers apply. Each victim can reward a kill only once.
+Weapons, slams and thrown bodies award credit. A fatal environmental fall
+within 10 seconds of player damage can also receive player credit.
+Player-triggered structural collapse retains ownership for crush kills.
+
+4. BUILDING SUPPORT, WOBBLE AND COLLAPSE
+---------------------------------------
+The tower is endless upward and streams a bounded set of nearby floors.
+Floor height is 3.6 metres. Each floor has FOUR structural support columns.
+"Structures left" in the collapse rule refers to those support columns,
+not furniture, windows, wall panels or individual slab bays.
+Each column has 2,400 HP regardless of floor height. CPU rivals do not target
+columns. All non-player attacks (including police, vehicles, bombs and
+gunship cannonballs) leave support columns undamaged. Player attacks and
+player-credited destruction can still damage columns.
+
+Four supports: normal frame.
+Three or two supports: the upper tower remains anchored and gently tilts and
+wobbles. Wobble is not a released collapse and does not cause crush damage.
+One or zero supports: the upper section can be released into physical collapse.
+Slab damage alone never releases the tower while two or more supports remain.
+Destroyed slab bays still remove local floor support and can cause falls.
+
+Wobble rotates the upper section around its supported base with bounded,
+small oscillations. Collision/aiming proxies move with the tower. Wobble is
+restored across floor-streaming updates. Catastrophic release removes the
+anchor, disables the elevator and moves the loaded upper tower as a compound
+rigid body. Slabs, walls and remaining columns participate in crush detection.
+Swept bounds detect people in the path of moving structural pieces.
+A moving collapse deals lethal 100-damage crush hits, including to the player.
+A stationary settled section is not an unlimited damage zone.
+Reset restores the frame, slab support, elevator and structural transforms.
+
+5. AIRCRAFT, VEHICLES AND MILITARY RESPONSE
+------------------------------------------
+Gunships and troop transports each have 400 HP. Player stones and rifle fire
+can damage them. At zero HP, the aircraft stops firing or deploying troops,
+its warning marker is removed, and the wreck falls and spins toward support.
+Shooting an aircraft down awards 5,000 base points once and increments the
+aircraft-down counter. Crashing aircraft can kill people and damage objects.
+Wrecks are cleaned up when they impact. Reset clears all aircraft state.
+
+Gunships orbit the player and use fixed target warnings before firing.
+Cannonballs are about 1.8 metres wide, travel at 110 m/s and last 4 seconds.
+They sweep their full path to avoid tunnelling, deal instant-kill character
+damage and 9,000 object damage (except protected support columns), and do
+not stop at objects or people.
+Ordinary modes allow two gunships. Insane allows sixteen. Siege raises the
+ordinary cap with score, up to sixteen.
+
+Transports fly in from outside the play area, hover at the player's selected
+floor, deploy alternating SWAT/military units onto the exterior landing, then
+leave. A normal deployment has four drops before mode pressure multipliers.
+They do not deploy while crashing. Normal transport cap is two; Insane and
+siege permit four.
+
+Cars have 280 HP; SWAT trucks have 2,500 HP. Rifle fire can disable them.
+A player-shot vehicle awards 2,500 base points on disable, once.
+Vehicles charge, damage props, carry incoming squads and can bounce off pads.
+Tanks have 1,200 HP and can also be disabled by rifle fire. Tanks and timed
+bombing runs provide marked area attacks. Siege patterns
+alternate carpet bombing, an artillery corridor and encirclement strikes.
+
+6. THREAT HUD AND ENEMY TIERS
+-----------------------------
+DANGER Lx/5 is the response tier or the highest active enemy tier, whichever
+is greater. Five illuminated bars correspond to that displayed level.
+The live roster lists the tier, name and count of every active enemy type,
+plus cars, trucks, gunships, airlifts and tanks. Downed aircraft do not count
+as active threats. Floor height is a separate FLOOR display.
+
+L1: POLICE (patrol).
+L2: SCOUT, patrol cars.
+L3: SWAT, RIOT, tactical trucks.
+L4: SNIPER, MEDIC, gunships, troop airlifts.
+L5: ARMY, GRENADIER, JUGGERNAUT, tanks.
+
+Scouts move faster; riot units resist frontal forced melee hits; snipers use
+telegraphed long-range shots; grenadiers use explosive projectiles; medics
+heal nearby living allies; juggernauts have slower movement and heavy strikes.
+All retain 100 HP. SWAT also has a visible shield and rifle.
+Smoke blocks enemy tracking. Officers use the external switchback stairs.
+
+7. SCORE, SPEED AND MODES
+-------------------------
+Combo multiplier: min(5, 1 + floor(combo / 3) * 0.5).
+The multiplier reaches x5 at combo 24, not combo 12.
+Destruction extends the chain window; kills also add combat points.
+Score and kill rewards freeze after the run ends.
+
+Every 500,000 points adds 15 percentage points of gameplay speed:
+500K = 1.15x; 1M = 1.30x; 1.5M = 1.45x; 2M = 1.60x, continuing upward.
+Movement, weapons, aircraft, physics and reinforcement pressure accelerate.
+The match clock remains real-time and freezes when paused or in cinematics.
+
+At 1,000,000, recurring combined siege waves begin: gunships, airlifts,
+specialists, armor, vehicles and alternating bombardment patterns.
+The base siege interval is 14 seconds divided by the current speed multiplier.
+Spawn caps remain in place rather than allowing unlimited active entities.
+Single Craze still applies its one-encounter-per-special-type rule.
+
+Modes: Single Craze, Regular, Extreme and Insane.
+Extreme starts at maximum response with an 8-second opening hit shield.
+Insane starts with 12 gunships, up to 16, six tanks, mixed specialists and a
+3-second opening hit shield. Insane has no passive healing.
+Instant-kill cannonballs, fatal falls and lethal crush damage bypass shields.
+The default match lasts five minutes; match length has a minimum of one
+minute and no configured maximum. Ratings: D 0, C 10K, B 75K, A 300K,
+S 1M, SS 3M, SSS 10M.
+
+8. FALLS, BODIES, BLOOD AND ELEVATORS
+------------------------------------
+Falls of four storeys (14.4 m) or more cause a fatal splat on ground impact.
+Trampolines can catch a genuine descending top contact before impact.
+A splat removes the visible character and ragdoll bodies/joints completely.
+Layered blood pools and fine droplets scale with fall height. Ground stains
+persist for the entire round, including the ending, and reset on a new run.
+Stains use four instanced texture batches; airborne spray is capped at 256.
+
+Ordinary deaths leave ragdolls that can be picked up with E, physically held,
+dropped with E or thrown with Attack. Thrown bodies can damage and kill.
+At most eight ragdolls remain physical; held bodies are protected from eviction.
+Unheld death ragdolls have a 60-second physical lifetime.
+
+The floor-select elevator is at x=9, z=6 and moves at 1.25 m/s.
+E opens its destination panel or calls the car from another floor.
+It has 900 HP; weapons/explosions can destroy it and drop the wreck down the
+shaft. It is also disabled by full tower collapse. Stairs remain the fallback.
+The green service lift at x=21, z=8 launches the player about two floors up.
+
+9. SETTINGS, ENDINGS AND STORAGE
+--------------------------------
+Graphics presets: Low, Medium, High, Ultra and Triple-A, with individual
+controls for shadows, shadow resolution, effects, debris, distance, texture
+detail, anisotropy, pixel ratio, saturation, exposure and post-processing.
+Performance stats show FPS, frame time, draw calls, triangles and bodies.
+One of five uploaded CE2 tracks is chosen per run and loops until ending.
+Music and effects have independent volume and mute controls.
+
+Intro plays each normal run. Timeout or banking leads to the surviving-player
+ending; death uses a dedicated death cinematic and never revives the player.
+Existing fictional arrest/Thursday story branches remain available to the
+ending system, but lethal combat is not automatically converted to arrest.
+Results include score, grade, destruction, kills, officers down, highest floor,
+time, debt and a fictional crime ledger. Sentencing text is arcade fiction.
+
+Settings and profile use localStorage key halfday-mayhem-v2. Records,
+achievements and cosmetic unlocks persist; weapons, ammo and loot do not.
+
+10. FILE MAP AND QA
+-------------------
+index.html: actual entry point; HUD, inventory, settings and ending markup.
+style.css: responsive UI and graphics overlays.
+game.js: loop, damage, rifle tracing, aircraft crashes, scoring, threat roster,
+         streaming integration, input, settings, endings and acceptance tests.
+loot.js: rifle model, dropped rifle/ammo collection and falling loot.
+world.js: procedural tower/props, materials, streaming and entity models.
+physics.js: Cannon world, anchored sway, collapse, crush detection, ragdolls,
+            physical body carrying, particles, vehicle and trampoline bodies.
+navigation.js: support lookup for intact/moving slabs and stair routing.
+enemies.js: role stats, threat tiers and specialist equipment.
+airlifts.js: transport approach, deployment, departure and crash handling.
+bodies.js: body selection, physical carrying and thrown-body damage.
+reinforcements.js: tanks, marked shells, bombs and siege patterns.
+effects.js: instanced blood, bounded spray/debris, trails and ragdoll wrappers.
+elevator.js: slow floor-select elevator, damage and reset.
+config.js: modes, difficulty, ratings, milestones and graphics defaults.
+crimes.js: fictional charge ledger, including credited homicide counts.
+characters.js: procedural skinned meshes, animation and pose recovery.
+cinematics.js: intro, death and surviving-player story sequences.
+progression.js: saves, profile, achievements and cosmetics.
+audio.js: soundtrack and procedural sound cues.
+contacts.js: top-contact trampoline checks.
+qa.html / qa.js: main-page-compatible automated acceptance harness.
+assets/: generated world textures and four blood decal textures.
+uploads/: soundtrack MP3 files.
+
+Acceptance tests cover acquisition/loot/reset, rifle damage and cover,
+shootable aircraft/vehicles, crash cleanup, every enemy's threat label,
+anchored wobble and support threshold, lethal structural impacts, kills,
+body carrying/throwing, falls/blood persistence, 500K speed steps and siege,
+plus navigation, streaming, elevators, modes, physics, scoring and endings.
